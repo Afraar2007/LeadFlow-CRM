@@ -1,0 +1,596 @@
+{
+  "info": {
+    "name": "LeadFlow CRM API",
+    "description": "Complete API collection for the LeadFlow CRM application.\n\n## Authentication\n- First, use the **Login** request to authenticate\n- The access token will be automatically set as a Bearer token for all subsequent requests\n- Access tokens expire in 15 minutes. Use **Refresh Token** to get a new one\n\n## Base URL\n`http://localhost:5000/api/v1`\n\n## Variables\n- `baseUrl`: http://localhost:5000/api/v1\n- `accessToken`: Auto-populated after login\n- `leadId`: Set from the Create Lead or List Leads response\n- `noteId`: Set from the Create Note or List Notes response",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "leadflow-crm"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "leadId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "noteId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "description": "Server health check and monitoring endpoints",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Returns server status, uptime, memory usage, and environment info."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"status\": \"ok\",\n    \"timestamp\": \"2026-06-16T10:00:00.000Z\",\n    \"uptime\": 123.456,\n    \"environment\": \"development\",\n    \"memoryUsage\": {\n      \"heapUsed\": \"24MB\",\n      \"heapTotal\": \"27MB\"\n    }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "description": "Authentication endpoints for user management and JWT tokens",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"StrongP@ss1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new admin user. Password must contain at least one uppercase letter, one lowercase letter, and one number."
+          },
+          "response": [
+            {
+              "name": "Registration Success",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Registration successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"...\",\n      \"name\": \"John Doe\",\n      \"email\": \"john@example.com\",\n      \"role\": \"Admin\",\n      \"avatar\": null,\n      \"createdAt\": \"2026-06-16T10:00:00.000Z\"\n    },\n    \"accessToken\": \"eyJhbGci...\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@leadflow.com\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login with email and password. Returns user profile and a JWT access token. Also sets an HttpOnly refresh token cookie."
+          },
+          "response": [
+            {
+              "name": "Login Success",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"...\",\n      \"name\": \"Admin User\",\n      \"email\": \"admin@leadflow.com\",\n      \"role\": \"Admin\",\n      \"avatar\": null,\n      \"lastLogin\": \"2026-06-16T10:00:00.000Z\",\n      \"createdAt\": \"2026-06-16T09:00:00.000Z\"\n    },\n    \"accessToken\": \"eyJhbGci...\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Get the currently authenticated user's profile. Requires a valid Bearer token in the Authorization header."
+          },
+          "response": [
+            {
+              "name": "User Profile",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"id\": \"...\",\n    \"name\": \"Admin User\",\n    \"email\": \"admin@leadflow.com\",\n    \"role\": \"Admin\",\n    \"avatar\": null,\n    \"isActive\": true,\n    \"lastLogin\": \"2026-06-16T10:00:00.000Z\",\n    \"createdAt\": \"2026-06-16T09:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Refresh the access token using the HttpOnly refresh token cookie set during login. Returns a new access token and sets a new refresh token cookie."
+          },
+          "response": [
+            {
+              "name": "Token Refreshed",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Token refreshed successfully\",\n  \"data\": {\n    \"accessToken\": \"eyJhbGci...\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Logout the current user. Clears the refresh token from the database and the HttpOnly cookie."
+          },
+          "response": [
+            {
+              "name": "Logout Success",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Logout successful\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Leads",
+      "description": "Lead CRUD operations with search, filter, sort, and pagination",
+      "item": [
+        {
+          "name": "List Leads",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.leads && jsonData.data.leads.length > 0) {",
+                  "        pm.collectionVariables.set('leadId', jsonData.data.leads[0]._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/leads?page=1&limit=10&sort=newest",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "sort", "value": "newest" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "status", "value": "", "disabled": true },
+                { "key": "priority", "value": "", "disabled": true },
+                { "key": "leadSource", "value": "", "disabled": true },
+                { "key": "startDate", "value": "", "disabled": true },
+                { "key": "endDate", "value": "", "disabled": true }
+              ]
+            },
+            "description": "List all leads with pagination, search, filters, and sorting.\n\n**Query Parameters:**\n- `page` (default: 1)\n- `limit` (default: 10, max: 100)\n- `sort` (newest | oldest | name | status | priority)\n- `search` (searches name, email, company, phone)\n- `status` (New | Contacted | Qualified | Proposal Sent | Negotiation | Won | Lost)\n- `priority` (Low | Medium | High)\n- `leadSource` (Website | Referral | LinkedIn | Cold Call | Email | Advertisement | Other)\n- `startDate` / `endDate` (ISO date strings for date range filter)"
+          },
+          "response": [
+            {
+              "name": "Leads List",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"leads\": [...],\n    \"pagination\": {\n      \"page\": 1,\n      \"limit\": 10,\n      \"total\": 25,\n      \"totalPages\": 3\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Lead",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('leadId', jsonData.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Jane Smith\",\n  \"email\": \"jane.smith@company.com\",\n  \"phone\": \"+1-555-0123\",\n  \"company\": \"Acme Corp\",\n  \"country\": \"United States\",\n  \"leadSource\": \"Website\",\n  \"message\": \"Interested in the enterprise plan with custom integrations.\",\n  \"status\": \"New\",\n  \"priority\": \"High\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leads",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads"]
+            },
+            "description": "Create a new lead. Only `fullName` and `email` are required. All other fields have defaults."
+          },
+          "response": [
+            {
+              "name": "Lead Created",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Lead created successfully\",\n  \"data\": {\n    \"_id\": \"...\",\n    \"fullName\": \"Jane Smith\",\n    \"email\": \"jane.smith@company.com\",\n    \"phone\": \"+1-555-0123\",\n    \"company\": \"Acme Corp\",\n    \"country\": \"United States\",\n    \"leadSource\": \"Website\",\n    \"message\": \"Interested in the enterprise plan with custom integrations.\",\n    \"status\": \"New\",\n    \"priority\": \"High\",\n    \"assignedTo\": null,\n    \"notesCount\": 0,\n    \"createdBy\": \"...\",\n    \"createdAt\": \"2026-06-16T10:00:00.000Z\",\n    \"updatedAt\": \"2026-06-16T10:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Lead",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}"]
+            },
+            "description": "Get a single lead by ID. Includes populated notes if available."
+          },
+          "response": [
+            {
+              "name": "Lead Details",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"_id\": \"...\",\n    \"fullName\": \"Jane Smith\",\n    \"email\": \"jane.smith@company.com\",\n    \"status\": \"New\",\n    \"priority\": \"High\",\n    \"notes\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Lead",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Jane Smith-Updated\",\n  \"company\": \"Acme Corp International\",\n  \"priority\": \"Medium\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}"]
+            },
+            "description": "Update an existing lead. Only send the fields you want to update."
+          },
+          "response": [
+            {
+              "name": "Lead Updated",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Lead updated successfully\",\n  \"data\": {\n    \"_id\": \"...\",\n    \"fullName\": \"Jane Smith-Updated\",\n    \"company\": \"Acme Corp International\",\n    \"priority\": \"Medium\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Lead Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Contacted\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}", "status"]
+            },
+            "description": "Quickly update the status of a lead. Valid statuses: New, Contacted, Qualified, Proposal Sent, Negotiation, Won, Lost."
+          },
+          "response": [
+            {
+              "name": "Status Updated",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Lead status updated successfully\",\n  \"data\": {\n    \"_id\": \"...\",\n    \"status\": \"Contacted\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Lead",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}"]
+            },
+            "description": "Delete a lead permanently. This will also delete all associated notes."
+          },
+          "response": [
+            {
+              "name": "Lead Deleted",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Lead deleted successfully\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notes",
+      "description": "Follow-up notes management for leads",
+      "item": [
+        {
+          "name": "List Notes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.length > 0) {",
+                  "        pm.collectionVariables.set('noteId', jsonData.data[0]._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}/notes",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}", "notes"]
+            },
+            "description": "Get all notes for a specific lead. Notes are sorted by creation date (newest first)."
+          },
+          "response": [
+            {
+              "name": "Notes List",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": [\n    {\n      \"_id\": \"...\",\n      \"lead\": \"...\",\n      \"author\": { \"_id\": \"...\", \"name\": \"Admin User\" },\n      \"text\": \"Initial call completed. Client expressed strong interest.\",\n      \"createdAt\": \"2026-06-16T10:00:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Note",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('noteId', jsonData.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Followed up with the client. They are interested in scheduling a product demo for next week.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}/notes",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}", "notes"]
+            },
+            "description": "Add a new follow-up note to a lead. Text must be between 3 and 1000 characters."
+          },
+          "response": [
+            {
+              "name": "Note Created",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Note added successfully\",\n  \"data\": {\n    \"_id\": \"...\",\n    \"lead\": \"...\",\n    \"author\": \"...\",\n    \"text\": \"Followed up with the client...\",\n    \"createdAt\": \"2026-06-16T10:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Note",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Updated: The demo is scheduled for next Tuesday at 2 PM. Client confirmed their availability.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}/notes/{{noteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}", "notes", "{{noteId}}"]
+            },
+            "description": "Edit an existing note. Only the text field can be updated."
+          },
+          "response": [
+            {
+              "name": "Note Updated",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Note updated successfully\",\n  \"data\": {\n    \"_id\": \"...\",\n    \"text\": \"Updated: The demo is scheduled for next Tuesday...\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Note",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}/notes/{{noteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}", "notes", "{{noteId}}"]
+            },
+            "description": "Delete a note permanently."
+          },
+          "response": [
+            {
+              "name": "Note Deleted",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Note deleted successfully\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "description": "Dashboard analytics and statistics endpoints",
+      "item": [
+        {
+          "name": "Dashboard Overview",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/overview",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "overview"]
+            },
+            "description": "Get dashboard statistics including total leads, new leads, contacted leads, won/lost counts, and conversion rate."
+          },
+          "response": [
+            {
+              "name": "Analytics Data",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"totalLeads\": 25,\n    \"newLeads\": 5,\n    \"contactedLeads\": 4,\n    \"qualifiedLeads\": 3,\n    \"proposalSentLeads\": 2,\n    \"negotiationLeads\": 1,\n    \"wonLeads\": 6,\n    \"lostLeads\": 4,\n    \"conversionRate\": 24.0,\n    \"recentActivities\": [\n      {\n        \"action\": \"created\",\n        \"leadName\": \"Sarah Johnson\",\n        \"timestamp\": \"2026-06-16T09:00:00.000Z\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Monthly Lead Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/monthly",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "monthly"]
+            },
+            "description": "Get monthly lead creation data for charts. Returns lead counts grouped by month."
+          },
+          "response": [
+            {
+              "name": "Monthly Data",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": [\n    {\n      \"year\": 2026,\n      \"month\": 5,\n      \"count\": 12\n    },\n    {\n      \"year\": 2026,\n      \"month\": 6,\n      \"count\": 8\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
