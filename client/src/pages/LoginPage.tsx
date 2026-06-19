@@ -18,17 +18,8 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
-  const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { login } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // If already authenticated, redirect immediately
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
-
   const {
     register,
     handleSubmit,
@@ -46,10 +37,10 @@ export function LoginPage() {
     try {
       await login(data);
       toast.success('Welcome back!');
-      // Small delay to ensure auth state propagates through context
-      setTimeout(() => {
-        navigate('/dashboard', { replace: true });
-      }, 50);
+      // DO NOT navigate here - PublicRoute will automatically redirect
+      // when React re-renders with isAuthenticated=true.
+      // Navigating before React processes the auth state update causes
+      // ProtectedRoute to check stale state and redirect back to /login.
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Invalid email or password';
       toast.error(message);
