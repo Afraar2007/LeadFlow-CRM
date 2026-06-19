@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,8 +19,15 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // If already authenticated, redirect immediately
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const {
     register,
@@ -39,7 +46,10 @@ export function LoginPage() {
     try {
       await login(data);
       toast.success('Welcome back!');
-      navigate('/dashboard');
+      // Small delay to ensure auth state propagates through context
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 50);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Invalid email or password';
       toast.error(message);

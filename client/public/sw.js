@@ -37,33 +37,41 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - network first, fallback to cache
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // IMPORTANT: Skip ALL cross-origin requests (API calls to render.com, etc.)
+  // The SW should NOT intercept requests to external domains
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
   // Skip non-GET requests
-  if (event.request.method !== 'GET') return;
+  if (request.method !== 'GET') return;
 
   // Skip API requests - always fetch from network
-  if (event.request.url.includes('/api/')) {
-    event.respondWith(fetch(event.request));
+  if (url.pathname.startsWith('/api/')) {
     return;
   }
 
   event.respondWith(
-    fetch(event.request)
+    fetch(request)
       .then((response) => {
         // Cache successful responses
         if (response.status === 200) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, clone);
+            cache.put(request, clone);
           });
         }
         return response;
       })
       .catch(() => {
         // Fallback to cache
-        return caches.match(event.request).then((cached) => {
+        return caches.match(request).then((cached) => {
           if (cached) return cached;
           // If page is not cached, return the offline page
-          if (event.request.mode === 'navigate') {
+          if (request.mode === 'navigate') {
             return caches.match('/');
           }
           return new Response('Offline', { status: 503 });

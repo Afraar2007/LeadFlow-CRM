@@ -18,4 +18,20 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    // Ensure proper chunking and sourcemaps for debugging
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['react-hot-toast', 'lucide-react'],
+        },
+      },
+    },
+  },
+  preview: {
+    // Preview server also needs SPA fallback (handled by nginx/vercel)
+    port: 5173,
+  },
 });
