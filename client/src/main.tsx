@@ -27,23 +27,26 @@ const queryClient = new QueryClient({
 
 // Service worker management
 // IMPORTANT: Immediately unregister existing service workers to prevent
-// them from intercepting cross-origin API requests and returning wrong data.
-// This must happen BEFORE any API calls are made, not on window.load.
-if ('serviceWorker' in navigator) {
-  (async () => {
-    try {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      for (const registration of registrations) {
-        await registration.unregister();
-      }
-      if (registrations.length > 0) {
-        console.debug('[SW] Old service worker unregistered successfully');
-      }
-    } catch (err) {
-      console.debug('[SW] Unregistration failed:', err);
-    }
-  })();
-}
+// them from intercepting cross-origin API requests and returning manifest.json instead of API responses.
+// We use a direct .then() chain instead of async/await to ensure this runs before React renders.
+(function() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations()
+      .then(function(registrations) {
+        if (registrations) {
+          for (var i = 0; i < registrations.length; i++) {
+            registrations[i].unregister();
+          }
+          if (registrations.length > 0) {
+            console.log('[SW] Unregistered ' + registrations.length + ' old service worker(s)');
+          }
+        }
+      })
+      .catch(function(err) {
+        console.warn('[SW] Unregistration error:', err);
+      });
+  }
+})();
 
 // Initialize theme from localStorage
 const storedTheme = localStorage.getItem('theme');
