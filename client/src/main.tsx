@@ -26,25 +26,23 @@ const queryClient = new QueryClient({
 });
 
 // Service worker management
-// IMPORTANT: First unregister any existing service workers to prevent
-// them from intercepting cross-origin API requests.
-// Then register a new one if appropriate.
+// IMPORTANT: Immediately unregister existing service workers to prevent
+// them from intercepting cross-origin API requests and returning wrong data.
+// This must happen BEFORE any API calls are made, not on window.load.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    // Always unregister existing SW first to clear stale caches
-    // that may interfere with API calls
+  (async () => {
     try {
       const registrations = await navigator.serviceWorker.getRegistrations();
       for (const registration of registrations) {
         await registration.unregister();
       }
       if (registrations.length > 0) {
-        console.debug('Service worker unregistered successfully');
+        console.debug('[SW] Old service worker unregistered successfully');
       }
     } catch (err) {
-      console.debug('Service worker unregistration failed:', err);
+      console.debug('[SW] Unregistration failed:', err);
     }
-  });
+  })();
 }
 
 // Initialize theme from localStorage

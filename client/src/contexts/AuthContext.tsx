@@ -80,8 +80,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Validate that response contains expected data before proceeding
       const response = await authApi.login(data);
       
-      if (!response || !response.accessToken || !response.user) {
-        throw new Error('Invalid response from server - missing authentication data');
+      console.debug('[AuthContext] Login response:', response);
+      
+      if (!response) {
+        throw new Error('Empty response from server');
+      }
+      if (!response.accessToken) {
+        console.error('[AuthContext] Missing accessToken in response:', response);
+        throw new Error('Server did not return an access token');
+      }
+      if (!response.user) {
+        console.error('[AuthContext] Missing user in response:', response);
+        throw new Error('Server did not return user data');
       }
       
       const { user, accessToken } = response;
@@ -89,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Update auth state - this ensures context subscribers are notified
       setAuth(user, accessToken);
     } catch (error) {
+      console.error('[AuthContext] Login failed:', error);
       setState((prev) => ({ ...prev, isLoading: false }));
       throw error;
     }
