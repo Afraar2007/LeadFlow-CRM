@@ -25,12 +25,25 @@ const queryClient = new QueryClient({
   },
 });
 
-// Register service worker for PWA support
+// Service worker management
+// IMPORTANT: First unregister any existing service workers to prevent
+// them from intercepting cross-origin API requests.
+// Then register a new one if appropriate.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-      // SW registration failed silently
-    });
+  window.addEventListener('load', async () => {
+    // Always unregister existing SW first to clear stale caches
+    // that may interfere with API calls
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.unregister();
+      }
+      if (registrations.length > 0) {
+        console.debug('Service worker unregistered successfully');
+      }
+    } catch (err) {
+      console.debug('Service worker unregistration failed:', err);
+    }
   });
 }
 
