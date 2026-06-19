@@ -29,24 +29,19 @@ const queryClient = new QueryClient({
 // IMPORTANT: Immediately unregister existing service workers to prevent
 // them from intercepting cross-origin API requests and returning manifest.json instead of API responses.
 // We use a direct .then() chain instead of async/await to ensure this runs before React renders.
-(function() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations()
-      .then(function(registrations) {
-        if (registrations) {
-          for (var i = 0; i < registrations.length; i++) {
-            registrations[i].unregister();
-          }
-          if (registrations.length > 0) {
-            console.log('[SW] Unregistered ' + registrations.length + ' old service worker(s)');
-          }
-        }
-      })
-      .catch(function(err) {
-        console.warn('[SW] Unregistration error:', err);
+// Immediately unregister any existing service workers before React renders
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    if (registrations && registrations.length > 0) {
+      registrations.forEach(function(registration) {
+        registration.unregister();
       });
-  }
-})();
+      console.log('[SW] Unregistered ' + registrations.length + ' old service worker(s)');
+    }
+  }).catch(function() {
+    // Silently fail - SW unregistration is not critical
+  });
+}
 
 // Initialize theme from localStorage
 const storedTheme = localStorage.getItem('theme');
