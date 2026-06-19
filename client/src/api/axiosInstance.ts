@@ -1,7 +1,8 @@
 import axios from 'axios';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
+//const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
+const API_BASE_URL = "https://leadflow-crm-h504.onrender.com/api/v1";
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -61,14 +62,16 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      try {
-       const { data } = await axiosInstance.post(
-        "/auth/refresh",
-         {}
-        );
-
-        const newToken = data.data.accessToken;
-        localStorage.setItem('accessToken', newToken);
+       try {
+        const refreshResponse = await axiosInstance.post("/auth/refresh");
+        
+        // Validate that the response has the expected structure
+        if (!refreshResponse.data || !refreshResponse.data.data || !refreshResponse.data.data.accessToken) {
+          throw new Error('Invalid refresh token response structure');
+        }
+        
+         const newToken = refreshResponse.data.data.accessToken;
+         localStorage.setItem('accessToken', newToken);
         axiosInstance.defaults.headers.common.Authorization = `Bearer ${newToken}`;
 
         processQueue(null, newToken);
